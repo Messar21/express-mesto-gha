@@ -1,23 +1,7 @@
-const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const User = require('../models/user');
-
-const handlerUserErrors = (req, res, err) => {
-  if (err instanceof mongoose.Error.ValidationError) {
-    return res.status(httpStatus.BAD_REQUEST)
-      .send({ message: 'Переданы некорректные данные.' });
-  }
-  if (err instanceof mongoose.Error.CastError) {
-    return res.status(httpStatus.BAD_REQUEST)
-      .send({ message: 'Переданы некорректные данные.' });
-  }
-  if (err instanceof Error) {
-    return res.status(httpStatus.NOT_FOUND)
-      .send({ message: 'Пользователь по указанному _id не найден' });
-  }
-  return res.status(httpStatus.INTERNAL_SERVER_ERROR)
-    .send({ message: 'На сервере произошла ошибка' });
-};
+const { handlerUserErrors } = require('../utils/handlerErrors');
+const { errorNotFound } = require('../utils/errors');
 
 const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
@@ -25,7 +9,7 @@ const createUser = (req, res) => {
     .then((newUser) => {
       res.status(httpStatus.CREATED).send(newUser);
     })
-    .catch((err) => handlerUserErrors(req, res, err));
+    .catch((err) => handlerUserErrors(res, err));
 };
 
 const getUser = (req, res) => {
@@ -33,11 +17,11 @@ const getUser = (req, res) => {
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        return Promise.reject(new Error());
+        return Promise.reject(errorNotFound);
       }
       return res.status(httpStatus.OK).send(user);
     })
-    .catch((err) => handlerUserErrors(req, res, err));
+    .catch((err) => handlerUserErrors(res, err));
 };
 
 const getAllUsers = (req, res) => {
@@ -45,7 +29,7 @@ const getAllUsers = (req, res) => {
     .then((users) => {
       res.status(httpStatus.OK).send(users);
     })
-    .catch((err) => handlerUserErrors(req, res, err));
+    .catch((err) => handlerUserErrors(res, err));
 };
 
 const updateProfile = (req, res) => {
@@ -55,7 +39,7 @@ const updateProfile = (req, res) => {
     .then((user) => {
       res.status(httpStatus.OK).send(user);
     })
-    .catch((err) => handlerUserErrors(req, res, err));
+    .catch((err) => handlerUserErrors(res, err));
 };
 
 const updateAvatar = (req, res) => {
@@ -65,7 +49,7 @@ const updateAvatar = (req, res) => {
     .then((user) => {
       res.status(httpStatus.OK).send(user);
     })
-    .catch((err) => handlerUserErrors(req, res, err));
+    .catch((err) => handlerUserErrors(res, err));
 };
 
 module.exports = {

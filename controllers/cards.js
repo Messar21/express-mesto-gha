@@ -1,23 +1,7 @@
-const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const Card = require('../models/card');
-
-const handlerCardsErrors = (req, res, err) => {
-  if (err instanceof mongoose.Error.ValidationError) {
-    return res.status(httpStatus.BAD_REQUEST)
-      .send({ message: 'Переданы некорректные данные.' });
-  }
-  if (err instanceof mongoose.Error.CastError) {
-    return res.status(httpStatus.BAD_REQUEST)
-      .send({ message: 'Переданы некорректные данные.' });
-  }
-  if (err instanceof Error) {
-    return res.status(httpStatus.NOT_FOUND)
-      .send({ message: 'Карточка с указаным _id не найдена.' });
-  }
-  return res.status(httpStatus.INTERNAL_SERVER_ERROR)
-    .send({ message: 'На сервере произошла ошибка' });
-};
+const { handlerCardsErrors } = require('../utils/handlerErrors');
+const { errorNotFound } = require('../utils/errors');
 
 const createCard = (req, res) => {
   const { name, link } = req.body;
@@ -26,31 +10,29 @@ const createCard = (req, res) => {
     .then((newCard) => {
       res.status(httpStatus.CREATED).send(newCard);
     })
-    .catch((err) => handlerCardsErrors(req, res, err));
+    .catch((err) => handlerCardsErrors(res, err));
 };
 
 const getCard = (req, res) => {
   const { cardId } = req.params;
   Card.findOne({ _id: cardId })
-    .populate('owner')
-    .populate('likes')
+    .populate(['owner', 'likes'])
     .then((card) => {
       if (!card) {
-        return Promise.reject(new Error());
+        return Promise.reject(errorNotFound);
       }
       return res.status(httpStatus.OK).send(card);
     })
-    .catch((err) => handlerCardsErrors(req, res, err));
+    .catch((err) => handlerCardsErrors(res, err));
 };
 
 const getAllCards = (req, res) => {
   Card.find({})
-    .populate('owner')
-    .populate('likes')
+    .populate(['owner', 'likes'])
     .then((cards) => {
       res.status(httpStatus.OK).send(cards);
     })
-    .catch((err) => handlerCardsErrors(req, res, err));
+    .catch((err) => handlerCardsErrors(res, err));
 };
 
 const deleteCard = (req, res) => {
@@ -58,11 +40,11 @@ const deleteCard = (req, res) => {
   Card.findByIdAndDelete(cardId)
     .then((card) => {
       if (!card) {
-        return Promise.reject(new Error());
+        return Promise.reject(errorNotFound);
       }
       return res.status(httpStatus.OK).send({ message: 'Карточка удалена' });
     })
-    .catch((err) => handlerCardsErrors(req, res, err));
+    .catch((err) => handlerCardsErrors(res, err));
 };
 
 const putLike = (req, res) => {
@@ -71,11 +53,11 @@ const putLike = (req, res) => {
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: _id } }, { new: true })
     .then((card) => {
       if (!card) {
-        return Promise.reject(new Error());
+        return Promise.reject(errorNotFound);
       }
       return res.status(httpStatus.OK).send(card);
     })
-    .catch((err) => handlerCardsErrors(req, res, err));
+    .catch((err) => handlerCardsErrors(res, err));
 };
 
 const deleteLike = (req, res) => {
@@ -84,11 +66,11 @@ const deleteLike = (req, res) => {
   Card.findByIdAndUpdate(cardId, { $pull: { likes: _id } }, { new: true })
     .then((card) => {
       if (!card) {
-        return Promise.reject(new Error());
+        return Promise.reject(errorNotFound);
       }
       return res.status(httpStatus.OK).send(card);
     })
-    .catch((err) => handlerCardsErrors(req, res, err));
+    .catch((err) => handlerCardsErrors(res, err));
 };
 
 module.exports = {
