@@ -7,9 +7,9 @@ const {
   updateAvatar,
 } = require('../controllers/users');
 
+userRouter.get('/:userId', getUser);
 userRouter.get('/', getAllUsers);
 userRouter.post('/', createUser);
-userRouter.get('/:userId', getUser);
 userRouter.patch('/me', updateProfile);
 userRouter.patch('/me/avatar', updateAvatar);
 

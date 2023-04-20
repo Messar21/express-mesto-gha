@@ -2,15 +2,16 @@ const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const User = require('../models/user');
 
-const SUCCES_CODE = 200;
-const SUCCES_CREATE_CODE = 201;
-
 const handlerCardErrors = (req, res, err) => {
   if (err instanceof mongoose.Error.ValidationError) {
     return res.status(httpStatus.BAD_REQUEST)
       .send({ message: 'Переданы некорректные данные.' });
   }
   if (err instanceof mongoose.Error.CastError) {
+    return res.status(httpStatus.NOT_FOUND)
+      .send({ message: 'Пользователь по указанному _id не найден' });
+  }
+  if (err instanceof Error) {
     return res.status(httpStatus.NOT_FOUND)
       .send({ message: 'Пользователь по указанному _id не найден' });
   }
@@ -22,7 +23,7 @@ const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
     .then((newUser) => {
-      res.status(SUCCES_CREATE_CODE).send(newUser);
+      res.status(httpStatus.CREATED).send(newUser);
     })
     .catch((err) => handlerCardErrors(req, res, err));
 };
@@ -31,7 +32,10 @@ const getUser = (req, res) => {
   const { userId } = req.params;
   User.findById(userId)
     .then((user) => {
-      res.status(SUCCES_CODE).send(user);
+      if (!user) {
+        return Promise.reject(new Error());
+      }
+      return res.status(httpStatus.OK).send(user);
     })
     .catch((err) => handlerCardErrors(req, res, err));
 };
@@ -39,7 +43,7 @@ const getUser = (req, res) => {
 const getAllUsers = (req, res) => {
   User.find({})
     .then((users) => {
-      res.status(SUCCES_CODE).send(users);
+      res.status(httpStatus.OK).send(users);
     })
     .catch((err) => handlerCardErrors(req, res, err));
 };
@@ -49,7 +53,7 @@ const updateProfile = (req, res) => {
   const { name, about } = req.body;
   User.findOneAndUpdate({ _id }, { $set: { name, about } }, { new: true, runValidators: true })
     .then((user) => {
-      res.status(SUCCES_CREATE_CODE).send(user);
+      res.status(httpStatus.OK).send(user);
     })
     .catch((err) => handlerCardErrors(req, res, err));
 };
@@ -59,7 +63,7 @@ const updateAvatar = (req, res) => {
   const { avatar } = req.body;
   User.findOneAndUpdate({ _id }, { $set: { avatar } }, { new: true, runValidators: true })
     .then((user) => {
-      res.status(SUCCES_CREATE_CODE).send(user);
+      res.status(httpStatus.OK).send(user);
     })
     .catch((err) => handlerCardErrors(req, res, err));
 };

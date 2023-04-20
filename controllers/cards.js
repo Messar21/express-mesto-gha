@@ -2,9 +2,6 @@ const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const Card = require('../models/card');
 
-const SUCCES_CODE = 200;
-const SUCCES_CREATE_CODE = 201;
-
 const handlerCardsErrors = (req, res, err) => {
   if (err instanceof mongoose.Error.ValidationError) {
     return res.status(httpStatus.BAD_REQUEST)
@@ -23,18 +20,18 @@ const createCard = (req, res) => {
   const { _id } = req.user;
   Card.create({ name, link, owner: _id })
     .then((newCard) => {
-      res.status(SUCCES_CREATE_CODE).send(newCard);
+      res.status(httpStatus.CREATED).send(newCard);
     })
     .catch((err) => handlerCardsErrors(req, res, err));
 };
 
 const getCard = (req, res) => {
   const { cardId } = req.params;
-  Card.findById(cardId)
+  Card.findOne(cardId)
     .populate('owner')
     .populate('likes')
     .then((card) => {
-      res.status(SUCCES_CODE).send(card);
+      res.status(httpStatus.OK).send(card);
     })
     .catch((err) => handlerCardsErrors(req, res, err));
 };
@@ -44,7 +41,7 @@ const getAllCards = (req, res) => {
     .populate('owner')
     .populate('likes')
     .then((cards) => {
-      res.status(SUCCES_CODE).send(cards);
+      res.status(httpStatus.OK).send(cards);
     })
     .catch((err) => handlerCardsErrors(req, res, err));
 };
@@ -53,7 +50,7 @@ const deleteCard = (req, res) => {
   const { cardId } = req.params;
   Card.findByIdAndDelete(cardId)
     .then(() => {
-      res.status(SUCCES_CREATE_CODE).send('Карточка удалена');
+      res.status(httpStatus.OK).send('Карточка удалена');
     })
     .catch((err) => handlerCardsErrors(req, res, err));
 };
@@ -63,7 +60,7 @@ const putLike = (req, res) => {
   const { _id } = req.user;
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: _id } }, { new: true })
     .then((card) => {
-      res.status(SUCCES_CREATE_CODE).send(card);
+      res.status(httpStatus.OK).send(card);
     })
     .catch((err) => handlerCardsErrors(req, res, err));
 };
@@ -73,7 +70,7 @@ const deleteLike = (req, res) => {
   const { _id } = req.user;
   Card.findByIdAndUpdate(cardId, { $pull: { likes: _id } }, { new: true })
     .then((card) => {
-      res.status(SUCCES_CREATE_CODE).send(card);
+      res.status(httpStatus.OK).send(card);
     })
     .catch((err) => handlerCardsErrors(req, res, err));
 };
