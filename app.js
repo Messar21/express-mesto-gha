@@ -17,6 +17,5 @@ app.use((req, res, next) => {
 });
 app.use('/', router);
 
-
 app.listen(PORT, () => {
 });

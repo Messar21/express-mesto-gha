@@ -1,7 +1,7 @@
+const httpStatus = require('http-status');
 const router = require('express').Router();
 const userRouter = require('./users');
 const cardsRouter = require('./cards');
-const httpStatus = require('http-status');
 
 router.use('/users', userRouter);
 router.use('/cards', cardsRouter);
