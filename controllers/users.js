@@ -2,14 +2,14 @@ const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const User = require('../models/user');
 
-const handlerCardErrors = (req, res, err) => {
+const handlerUserErrors = (req, res, err) => {
   if (err instanceof mongoose.Error.ValidationError) {
     return res.status(httpStatus.BAD_REQUEST)
       .send({ message: 'Переданы некорректные данные.' });
   }
   if (err instanceof mongoose.Error.CastError) {
-    return res.status(httpStatus.NOT_FOUND)
-      .send({ message: 'Пользователь по указанному _id не найден' });
+    return res.status(httpStatus.BAD_REQUEST)
+      .send({ message: 'Переданы некорректные данные.' });
   }
   if (err instanceof Error) {
     return res.status(httpStatus.NOT_FOUND)
@@ -25,7 +25,7 @@ const createUser = (req, res) => {
     .then((newUser) => {
       res.status(httpStatus.CREATED).send(newUser);
     })
-    .catch((err) => handlerCardErrors(req, res, err));
+    .catch((err) => handlerUserErrors(req, res, err));
 };
 
 const getUser = (req, res) => {
@@ -37,7 +37,7 @@ const getUser = (req, res) => {
       }
       return res.status(httpStatus.OK).send(user);
     })
-    .catch((err) => handlerCardErrors(req, res, err));
+    .catch((err) => handlerUserErrors(req, res, err));
 };
 
 const getAllUsers = (req, res) => {
@@ -45,7 +45,7 @@ const getAllUsers = (req, res) => {
     .then((users) => {
       res.status(httpStatus.OK).send(users);
     })
-    .catch((err) => handlerCardErrors(req, res, err));
+    .catch((err) => handlerUserErrors(req, res, err));
 };
 
 const updateProfile = (req, res) => {
@@ -55,7 +55,7 @@ const updateProfile = (req, res) => {
     .then((user) => {
       res.status(httpStatus.OK).send(user);
     })
-    .catch((err) => handlerCardErrors(req, res, err));
+    .catch((err) => handlerUserErrors(req, res, err));
 };
 
 const updateAvatar = (req, res) => {
@@ -65,7 +65,7 @@ const updateAvatar = (req, res) => {
     .then((user) => {
       res.status(httpStatus.OK).send(user);
     })
-    .catch((err) => handlerCardErrors(req, res, err));
+    .catch((err) => handlerUserErrors(req, res, err));
 };
 
 module.exports = {

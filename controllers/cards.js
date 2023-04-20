@@ -8,8 +8,12 @@ const handlerCardsErrors = (req, res, err) => {
       .send({ message: 'Переданы некорректные данные.' });
   }
   if (err instanceof mongoose.Error.CastError) {
+    return res.status(httpStatus.BAD_REQUEST)
+      .send({ message: 'Переданы некорректные данные.' });
+  }
+  if (err instanceof Error) {
     return res.status(httpStatus.NOT_FOUND)
-      .send({ message: 'Карточка по указанному _id не найденa.' });
+      .send({ message: 'Карточка с указаным _id не найдена.' });
   }
   return res.status(httpStatus.INTERNAL_SERVER_ERROR)
     .send({ message: 'На сервере произошла ошибка' });
@@ -27,11 +31,14 @@ const createCard = (req, res) => {
 
 const getCard = (req, res) => {
   const { cardId } = req.params;
-  Card.findOne(cardId)
+  Card.findOne({ _id: cardId })
     .populate('owner')
     .populate('likes')
     .then((card) => {
-      res.status(httpStatus.OK).send(card);
+      if (!card) {
+        return Promise.reject(new Error());
+      }
+      return res.status(httpStatus.OK).send(card);
     })
     .catch((err) => handlerCardsErrors(req, res, err));
 };
@@ -49,8 +56,11 @@ const getAllCards = (req, res) => {
 const deleteCard = (req, res) => {
   const { cardId } = req.params;
   Card.findByIdAndDelete(cardId)
-    .then(() => {
-      res.status(httpStatus.OK).send('Карточка удалена');
+    .then((card) => {
+      if (!card) {
+        return Promise.reject(new Error());
+      }
+      return res.status(httpStatus.OK).send({ message: 'Карточка удалена' });
     })
     .catch((err) => handlerCardsErrors(req, res, err));
 };
@@ -60,7 +70,10 @@ const putLike = (req, res) => {
   const { _id } = req.user;
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: _id } }, { new: true })
     .then((card) => {
-      res.status(httpStatus.OK).send(card);
+      if (!card) {
+        return Promise.reject(new Error());
+      }
+      return res.status(httpStatus.OK).send(card);
     })
     .catch((err) => handlerCardsErrors(req, res, err));
 };
@@ -70,7 +83,10 @@ const deleteLike = (req, res) => {
   const { _id } = req.user;
   Card.findByIdAndUpdate(cardId, { $pull: { likes: _id } }, { new: true })
     .then((card) => {
-      res.status(httpStatus.OK).send(card);
+      if (!card) {
+        return Promise.reject(new Error());
+      }
+      return res.status(httpStatus.OK).send(card);
     })
     .catch((err) => handlerCardsErrors(req, res, err));
 };
