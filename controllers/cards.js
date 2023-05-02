@@ -36,8 +36,9 @@ const getAllCards = (req, res) => {
 };
 
 const deleteCard = (req, res) => {
+  const { _id } = req.user;
   const { cardId } = req.params;
-  Card.findByIdAndDelete(cardId)
+  Card.findOneAndDelete({ _id: cardId, owner: _id })
     .then((card) => {
       if (!card) {
         return Promise.reject(errorNotFound);
