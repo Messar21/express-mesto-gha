@@ -1,77 +1,80 @@
 const httpStatus = require('http-status');
 const Card = require('../models/card');
-const { handlerCardsErrors } = require('../utils/handlerErrors');
-const { errorNotFound } = require('../utils/errors');
+const NotFoundError = require('../utils/errors/not-found-error');
+const BadRequest = require('../utils/errors/bad-req-error');
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link } = req.body;
+  if (!name || !link) {
+    throw new BadRequest('Имя карточки или ссылка не могут быть пустыми');
+  }
   const { _id } = req.user;
   Card.create({ name, link, owner: _id })
     .then((newCard) => {
       res.status(httpStatus.CREATED).send(newCard);
     })
-    .catch((err) => handlerCardsErrors(res, err));
+    .catch(next);
 };
 
-const getCard = (req, res) => {
+const getCard = (req, res, next) => {
   const { cardId } = req.params;
   Card.findOne({ _id: cardId })
     .populate(['owner', 'likes'])
     .then((card) => {
       if (!card) {
-        return Promise.reject(errorNotFound);
+        throw new NotFoundError('Карточка с таким _id не найдена');
       }
       return res.status(httpStatus.OK).send(card);
     })
-    .catch((err) => handlerCardsErrors(res, err));
+    .catch(next);
 };
 
-const getAllCards = (req, res) => {
+const getAllCards = (req, res, next) => {
   Card.find({})
     .populate(['owner', 'likes'])
     .then((cards) => {
       res.status(httpStatus.OK).send(cards);
     })
-    .catch((err) => handlerCardsErrors(res, err));
+    .catch(next);
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   const { _id } = req.user;
   const { cardId } = req.params;
   Card.findOneAndDelete({ _id: cardId, owner: _id })
     .then((card) => {
       if (!card) {
-        return Promise.reject(errorNotFound);
+        throw new NotFoundError('Карточка с таким _id не найдена');
       }
-      return res.status(httpStatus.OK).send({ message: 'Карточка удалена' });
+      res.status(httpStatus.OK).send({ message: 'Карточка удалена' });
     })
-    .catch((err) => handlerCardsErrors(res, err));
+    .catch(next);
 };
 
-const putLike = (req, res) => {
+const putLike = (req, res, next) => {
   const { cardId } = req.params;
   const { _id } = req.user;
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: _id } }, { new: true })
     .then((card) => {
       if (!card) {
-        return Promise.reject(errorNotFound);
+        throw new NotFoundError('Карточка с таким _id не найдена');
       }
       return res.status(httpStatus.OK).send(card);
     })
-    .catch((err) => handlerCardsErrors(res, err));
+    .catch(next);
 };
 
-const deleteLike = (req, res) => {
+const deleteLike = (req, res, next) => {
   const { cardId } = req.params;
   const { _id } = req.user;
   Card.findByIdAndUpdate(cardId, { $pull: { likes: _id } }, { new: true })
     .then((card) => {
       if (!card) {
-        return Promise.reject(errorNotFound);
+        throw new NotFoundError('Карточка с таким _id не найдена');
       }
       return res.status(httpStatus.OK).send(card);
     })
-    .catch((err) => handlerCardsErrors(res, err));
+    .catch(next);
 };
 
 module.exports = {

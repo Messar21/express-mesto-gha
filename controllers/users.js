@@ -1,24 +1,22 @@
 const httpStatus = require('http-status');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
-const { handlerUserErrors } = require('../utils/handlerErrors');
-const { errorNotFound } = require('../utils/errors');
+const ConflictError = require('../utils/errors/conflict-error');
+const BadRequest = require('../utils/errors/bad-req-error');
+const NotFoundError = require('../utils/errors/not-found-error');
 const { handlerAuth } = require('../utils/handlerAuth');
 const { generateJWT } = require('../utils/generateJWT');
 
-const createUser = (req, res) => {
-  handlerAuth(req, res);
+const createUser = (req, res, next) => {
+  handlerAuth(req);
   const {
     name, about, avatar, email, password,
   } = req.body;
   User.findOne({ email })
     .then((user) => {
       if (user) {
-        const error = new Error();
-        error.statusCode = 401;
-        return Promise.reject(error);
+        throw new ConflictError('Пользователь уже существует');
       }
-      return null;
     })
     .then(() => bcrypt.hash(password, 10))
     .then((hash) => User.create({
@@ -27,30 +25,30 @@ const createUser = (req, res) => {
     .then((newUser) => {
       res.status(httpStatus.CREATED).send({ message: `Пользователь ${newUser.email} успешно зарегистрирован` });
     })
-    .catch((err) => handlerUserErrors(res, err));
+    .catch(next);
 };
 
-const login = (req, res) => {
-  handlerAuth(req, res);
+const login = (req, res, next) => {
+  handlerAuth(req);
   const { email, password } = req.body;
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        throw new BadRequest('Неправильные почта или пароль');
       }
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            return Promise.reject(new Error('Неправильные почта или пароль'));
+            throw new BadRequest('Неправильные почта или пароль');
           }
           const token = generateJWT(user._id);
-          return res.status(201).send({ token });
+          return res.status(httpStatus.CREATED).send({ token });
         });
     })
-    .catch((err) => handlerUserErrors(res, err));
+    .catch(next);
 };
 
-const getUser = (req, res) => {
+const getUser = (req, res, next) => {
   let { userId } = req.params;
   if (userId === 'me') {
     userId = req.user._id;
@@ -58,39 +56,39 @@ const getUser = (req, res) => {
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        return Promise.reject(errorNotFound);
+        throw new NotFoundError('Пользователь не найден');
       }
       return res.status(httpStatus.OK).send(user);
     })
-    .catch((err) => handlerUserErrors(res, err));
+    .catch(next);
 };
 
-const getAllUsers = (req, res) => {
+const getAllUsers = (req, res, next) => {
   User.find({})
     .then((users) => {
       res.status(httpStatus.OK).send(users);
     })
-    .catch((err) => handlerUserErrors(res, err));
+    .catch(next);
 };
 
-const updateProfile = (req, res) => {
+const updateProfile = (req, res, next) => {
   const { _id } = req.user;
   const { name, about } = req.body;
   User.findOneAndUpdate({ _id }, { $set: { name, about } }, { new: true, runValidators: true })
     .then((user) => {
       res.status(httpStatus.OK).send(user);
     })
-    .catch((err) => handlerUserErrors(res, err));
+    .catch(next);
 };
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const { _id } = req.user;
   const { avatar } = req.body;
   User.findOneAndUpdate({ _id }, { $set: { avatar } }, { new: true, runValidators: true })
     .then((user) => {
       res.status(httpStatus.OK).send(user);
     })
-    .catch((err) => handlerUserErrors(res, err));
+    .catch(next);
 };
 
 module.exports = {

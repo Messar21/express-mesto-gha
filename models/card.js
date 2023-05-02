@@ -11,6 +11,13 @@ const cardSchema = new mongoose.Schema({
   link: {
     type: mongoose.SchemaTypes.Url,
     required: true,
+    validate: {
+      validator: (url) => {
+        const regex = /([\w+]+\/\/)?([\w\d-]+\.)*[\w-]+\w+([\w-]+)*\/?/gm;
+        return regex.test(url);
+      },
+      message: 'Некорректная ссылка',
+    },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,

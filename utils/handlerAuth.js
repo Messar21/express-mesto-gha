@@ -1,7 +1,9 @@
-const handlerAuth = (req, res) => {
+const BadRequest = require('./errors/bad-req-error');
+
+const handlerAuth = (req) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    res.status(400).send({ message: 'Email или пароль не могут быть пустыми' });
+    throw new BadRequest('Email или пароль не могут быть пустыми');
   }
 };
 
