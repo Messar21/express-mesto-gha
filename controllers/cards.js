@@ -2,6 +2,7 @@ const httpStatus = require('http-status');
 const Card = require('../models/card');
 const NotFoundError = require('../utils/errors/not-found-error');
 const BadRequest = require('../utils/errors/bad-req-error');
+const ForbiddenError = require('../utils/errors/forbidden-error');
 
 const createCard = (req, res, next) => {
   const { name, link } = req.body;
@@ -44,7 +45,7 @@ const deleteCard = (req, res, next) => {
   Card.findOneAndDelete({ _id: cardId, owner: _id })
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Карточка с таким _id не найдена');
+        throw new ForbiddenError('Доступ запрещен!');
       }
       res.status(httpStatus.OK).send({ message: 'Карточка удалена' });
     })

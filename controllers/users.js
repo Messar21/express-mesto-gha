@@ -2,7 +2,7 @@ const httpStatus = require('http-status');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const ConflictError = require('../utils/errors/conflict-error');
-const BadRequest = require('../utils/errors/bad-req-error');
+const Unauthorised = require('../utils/errors/unauth-error');
 const NotFoundError = require('../utils/errors/not-found-error');
 const { handlerAuth } = require('../utils/handlerAuth');
 const { generateJWT } = require('../utils/generateJWT');
@@ -34,15 +34,15 @@ const login = (req, res, next) => {
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        throw new BadRequest('Неправильные почта или пароль');
+        throw new Unauthorised('Неправильные почта или пароль');
       }
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            throw new BadRequest('Неправильные почта или пароль');
+            throw new Unauthorised('Неправильные почта или пароль');
           }
           const token = generateJWT(user._id);
-          return res.status(httpStatus.CREATED).send({ token });
+          return res.status(httpStatus.OK).send({ token });
         });
     })
     .catch(next);

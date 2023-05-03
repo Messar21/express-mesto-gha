@@ -9,11 +9,11 @@ const cardSchema = new mongoose.Schema({
     maxlength: 30,
   },
   link: {
-    type: mongoose.SchemaTypes.Url,
+    type: String,
     required: true,
     validate: {
       validator: (url) => {
-        const regex = /([\w+]+\/\/)?([\w\d-]+\.)*[\w-]+\w+([\w-]+)*\/?/gm;
+        const regex = /(http|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:~+#-]*[\w@?^=%&~+#-])/;
         return regex.test(url);
       },
       message: 'Некорректная ссылка',

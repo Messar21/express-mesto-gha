@@ -16,11 +16,11 @@ const userSchema = new mongoose.Schema({
     default: 'Исследователь',
   },
   avatar: {
-    type: mongoose.SchemaTypes.Url,
+    type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
       validator: (url) => {
-        const regex = /([\w+]+\/\/)?([\w\d-]+\.)*[\w-]+\w+([\w-]+)*\/?/gm;
+        const regex = /(http|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:~+#-]*[\w@?^=%&~+#-])/;
         return regex.test(url);
       },
       message: 'Некорректная ссылка',
