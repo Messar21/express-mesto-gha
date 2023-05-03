@@ -40,14 +40,23 @@ const getAllCards = (req, res, next) => {
 };
 
 const deleteCard = (req, res, next) => {
-  const { _id } = req.user;
+  const userId = req.user._id;
   const { cardId } = req.params;
-  Card.findOneAndDelete({ _id: cardId, owner: _id })
+  Card.findOne({ _id: cardId })
     .then((card) => {
       if (!card) {
-        throw new ForbiddenError('Доступ запрещен!');
+        throw new NotFoundError('Карточка с таким _id не найдена');
       }
-      res.status(httpStatus.OK).send({ message: 'Карточка удалена' });
+    })
+    .then(() => {
+      Card.findOneAndDelete({ _id: cardId, owner: userId })
+        .then((card) => {
+          if (!card) {
+            throw new ForbiddenError('Доступ запрещен!');
+          }
+          res.status(httpStatus.OK).send({ message: 'Карточка удалена' });
+        })
+        .catch(next);
     })
     .catch(next);
 };

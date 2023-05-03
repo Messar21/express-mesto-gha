@@ -23,7 +23,10 @@ const createUser = (req, res, next) => {
       name, about, avatar, email, password: hash,
     }))
     .then((newUser) => {
-      res.status(httpStatus.CREATED).send({ message: `Пользователь ${newUser.email} успешно зарегистрирован` });
+      User.findOne({ _id: newUser._id })
+        .then((createdUser) => {
+          res.status(httpStatus.CREATED).send(createdUser);
+        });
     })
     .catch(next);
 };
