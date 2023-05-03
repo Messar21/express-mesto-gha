@@ -1,11 +1,11 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const httpStatus = require('http-status');
 const { celebrate, Joi, errors } = require('celebrate');
 
 const { login, createUser } = require('./controllers/users');
 const { auth } = require('./middlewares/auth');
 const router = require('./routes');
+const { handlerErrors } = require('./middlewares/handlerErrors');
 
 const { PORT = 3000 } = process.env;
 
@@ -34,17 +34,7 @@ app.post('/signup', celebrate({
 app.use(auth);
 app.use('/', router);
 app.use(errors());
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-  const { statusCode = httpStatus.INTERNAL_SERVER_ERROR, message } = err;
-  return res
-    .status(statusCode)
-    .send({
-      message: statusCode === httpStatus.INTERNAL_SERVER_ERROR
-        ? 'На сервере произошла ошибка'
-        : message,
-    });
-});
+app.use(handlerErrors);
 
 app.listen(PORT, () => {
 });

@@ -26,7 +26,8 @@ const createUser = (req, res, next) => {
       User.findOne({ _id: newUser._id })
         .then((createdUser) => {
           res.status(httpStatus.CREATED).send(createdUser);
-        });
+        })
+        .catch(next);
     })
     .catch(next);
 };
@@ -46,7 +47,8 @@ const login = (req, res, next) => {
           }
           const token = generateJWT(user._id);
           return res.status(httpStatus.OK).send({ token });
-        });
+        })
+        .catch(next);
     })
     .catch(next);
 };
