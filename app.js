@@ -37,12 +37,6 @@ app.use(errors());
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   const { statusCode = httpStatus.INTERNAL_SERVER_ERROR, message } = err;
-  if (err instanceof mongoose.Error.CastError) {
-    return res.status(httpStatus.BAD_REQUEST).send({ message: 'Некоректный _id' });
-  }
-  if (err instanceof mongoose.Error.ValidationError) {
-    return res.status(httpStatus.BAD_REQUEST).send({ message });
-  }
   return res
     .status(statusCode)
     .send({
