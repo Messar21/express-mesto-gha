@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const Unauthorised = require('../utils/errors/unauth-error');
 
 const SECRET = 'mosthiddensecretofallsecrets';
+
 const auth = async (req, res, next) => {
   const { authorization } = req.headers;
   if (!authorization || !authorization.startsWith('Bearer ')) {
@@ -12,7 +13,7 @@ const auth = async (req, res, next) => {
   try {
     payload = await jwt.verify(token, SECRET);
   } catch (err) {
-    throw new Unauthorised('Необходима авторизация');
+    next(new Unauthorised('Необходима авторизация'));
   }
   req.user = payload;
   next();
