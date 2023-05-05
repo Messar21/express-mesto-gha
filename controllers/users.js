@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const Unauthorised = require('../utils/errors/unauth-error');
 const NotFoundError = require('../utils/errors/not-found-error');
+const ConflictError = require('../utils/errors/conflict-error');
 const { generateJWT } = require('../utils/generateJWT');
 
 const createUser = (req, res, next) => {
@@ -20,7 +21,12 @@ const createUser = (req, res, next) => {
         })
         .catch(next);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.code === 11000) {
+        return next(new ConflictError('Такой пользователь уже существует'));
+      }
+      return next(err);
+    });
 };
 
 const login = (req, res, next) => {
