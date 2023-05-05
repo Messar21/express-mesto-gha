@@ -1,31 +1,14 @@
 const httpStatus = require('http-status');
 const Card = require('../models/card');
 const NotFoundError = require('../utils/errors/not-found-error');
-const BadRequest = require('../utils/errors/bad-req-error');
 const ForbiddenError = require('../utils/errors/forbidden-error');
 
 const createCard = (req, res, next) => {
   const { name, link } = req.body;
-  if (!name || !link) {
-    throw new BadRequest('Имя карточки или ссылка не могут быть пустыми');
-  }
   const { _id } = req.user;
   Card.create({ name, link, owner: _id })
     .then((newCard) => {
       res.status(httpStatus.CREATED).send(newCard);
-    })
-    .catch(next);
-};
-
-const getCard = (req, res, next) => {
-  const { cardId } = req.params;
-  Card.findOne({ _id: cardId })
-    .populate(['owner', 'likes'])
-    .then((card) => {
-      if (!card) {
-        throw new NotFoundError('Карточка с таким _id не найдена');
-      }
-      return res.status(httpStatus.OK).send(card);
     })
     .catch(next);
 };
@@ -89,7 +72,6 @@ const deleteLike = (req, res, next) => {
 
 module.exports = {
   createCard,
-  getCard,
   getAllCards,
   deleteCard,
   putLike,

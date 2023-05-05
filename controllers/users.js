@@ -1,24 +1,15 @@
 const httpStatus = require('http-status');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
-const ConflictError = require('../utils/errors/conflict-error');
 const Unauthorised = require('../utils/errors/unauth-error');
 const NotFoundError = require('../utils/errors/not-found-error');
-const { handlerAuth } = require('../utils/handlerAuth');
 const { generateJWT } = require('../utils/generateJWT');
 
 const createUser = (req, res, next) => {
-  handlerAuth(req);
   const {
     name, about, avatar, email, password,
   } = req.body;
-  User.findOne({ email })
-    .then((user) => {
-      if (user) {
-        throw new ConflictError('Пользователь уже существует');
-      }
-    })
-    .then(() => bcrypt.hash(password, 10))
+  bcrypt.hash(password, 10)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
@@ -33,7 +24,6 @@ const createUser = (req, res, next) => {
 };
 
 const login = (req, res, next) => {
-  handlerAuth(req);
   const { email, password } = req.body;
   User.findOne({ email }).select('+password')
     .then((user) => {
